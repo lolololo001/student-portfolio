@@ -1,45 +1,88 @@
 import streamlit as st
 import os
 
+import streamlit as st
+
 # Set page config
 st.set_page_config(page_title="My Digital Footprint", page_icon="🚀", layout="wide")
 
+# Owner's Credentials (For Authentication)
+OWNER_EMAIL = "uwalaurene250@gmail.com"
+OWNER_PASSWORD = "Laurene250"
+
+# Initialize session state for authentication and login visibility
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+if "show_login" not in st.session_state:
+    st.session_state.show_login = False
+
+# Profile Details (Static)
+PROFILE_DETAILS = {
+    "name": "Laurene UWABATONI",
+    "location": "Musanze, Rwanda",
+    "field_of_study": "Software Engineering, Year 3",
+    "university": "INES Ruhengeri",
+    "about_me": """I am Laurene, an enthusiastic software engineering student set to graduate this year, driven by technology's potential to solve real-world challenges and enhance efficiency. 
+    Currently, I am working on my final dissertation and developing a personal portfolio using Python Streamlit."""
+}
+
 # Sidebar Navigation
 st.sidebar.title("📌 Navigation")
-page = st.sidebar.radio("Go to", ["Home", "Projects", "Skills", "Testimonials", "Timeline","Contact","Settings"])
+page = st.sidebar.radio("Go to", ["Home", "Projects", "Skills", "Testimonials", "Contact", "Timeline"])
 
-# Home Page
+# Authentication Section
 if page == "Home":
     st.title("🚀 My Digital Footprint – Showcasing My Journey")
 
-    uploaded_image = st.file_uploader("Upload Profile Picture", type=["jpg", "png"])
-    if uploaded_image:
-        st.image(uploaded_image, width=150, caption="Profile Picture")
-    else:
-        st.image("queen.jpg", width=150, caption="Profile Picture")
+    # Button to show/hide login form
+    if not st.session_state.authenticated:
+        if st.button("🔐 Admin Login"):
+            st.session_state.show_login = not st.session_state.show_login  # Toggle login form visibility
 
-    # Dynamic Profile Editing
-    name = st.text_input("Your Name", "UWABATONI Laurene")
-    location = st.text_input("Location", "Musanze, Rwanda")
-    field_of_study = st.text_input("Field of Study", "Software Engineering, Year 3")
-    university = st.text_input("University", "INES Ruhengeri")
+    # Display login form only if the button is clicked
+    if st.session_state.show_login and not st.session_state.authenticated:
+        with st.form("login_form"):
+            st.subheader("🔑 Enter Admin Credentials")
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
+            login_button = st.form_submit_button("Login")
 
-    st.write(f"📍 {location}")
-    st.write(f"📚 {field_of_study}")
-    st.write(f"🎓 {university}")
+            if login_button:
+                if email == OWNER_EMAIL and password == OWNER_PASSWORD:
+                    st.session_state.authenticated = True
+                    st.success("✅ Login successful! You can now update your profile picture.")
+                    st.session_state.show_login = False  # Hide form after login
+                else:
+                    st.error("❌ Invalid email or password. Access denied!")
 
-    # Resume Download
-    try:
-        with open("My Resume.pdf", "rb") as file:
-            resume_bytes = file.read()
-        st.download_button(label="📄 Download Resume", data=resume_bytes, file_name="resume1.pdf", mime="application/pdf")
-    except FileNotFoundError:
-        st.warning("⚠ Resume file not found. Please upload your resume.")
+    # Display Profile Section
+    st.subheader("👩‍💻 About Me")
+
+    # Profile Picture with Camera Icon Button
+    col1, col2 = st.columns([1, 6])
+    with col1:
+        st.image("queen.jpg", width=150, caption="Profile Picture")  
+    with col2:
+        if st.session_state.authenticated:
+            if st.button("📷", help="Update Profile Picture"):
+                uploaded_image = st.file_uploader("Upload a new profile picture", type=["jpg", "png"])
+                if uploaded_image:
+                    with open("queen.jpg", "wb") as file:
+                        file.write(uploaded_image.getbuffer())
+                    st.success("✅ Profile picture updated successfully! Refresh to see changes.")
+
+    # Display Profile Details
+    st.write(f"👤 Name: {PROFILE_DETAILS['name']}")
+    st.write(f"📍 Location: {PROFILE_DETAILS['location']}")
+    st.write(f"📚 Field of Study: {PROFILE_DETAILS['field_of_study']}")
+    st.write(f"🎓 University: {PROFILE_DETAILS['university']}")
+    st.write(f"📝 About Me: {PROFILE_DETAILS['about_me']}")
 
     # About Me section
     st.subheader("About Me")
-    about_me = st.text_area("Write a short description about yourself", "I am Laurene, an enthusiastic software engineering student set to graduate this year, driven by technology's potential to solve real-world challenges and enhance efficiency. Currently, I am working on my final dissertation and developing a personal portfolio using Python Streamlit.")
+    about_me = st.text_area("Write a short description about yourself", PROFILE_DETAILS["about_me"])
     st.write(about_me)
+
 
 # Projects Page with Filtering System
 elif page == "Projects":
