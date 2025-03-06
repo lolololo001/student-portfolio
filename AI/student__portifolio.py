@@ -1,8 +1,6 @@
 import streamlit as st
 import os
 
-import streamlit as st
-
 # Set page config
 st.set_page_config(page_title="My Digital Footprint", page_icon="🚀", layout="wide")
 
@@ -28,7 +26,7 @@ PROFILE_DETAILS = {
 
 # Sidebar Navigation
 st.sidebar.title("📌 Navigation")
-page = st.sidebar.radio("Go to", ["Home", "Projects", "Skills", "Testimonials", "Contact", "Timeline"])
+page = st.sidebar.radio("Go to", ["Home", "Projects", "Skills", "Testimonials", "Contact", "Timeline","Settings"])
 
 # Authentication Section
 if page == "Home":
@@ -36,7 +34,7 @@ if page == "Home":
 
     # Button to show/hide login form
     if not st.session_state.authenticated:
-        if st.button("🔐 Admin Login"):
+        if st.button("🔐 Login to edit profile"):
             st.session_state.show_login = not st.session_state.show_login  # Toggle login form visibility
 
     # Display login form only if the button is clicked
@@ -183,21 +181,68 @@ elif page == "Contact":
 # Settings Page
 elif page == "Settings":
     st.title("⚙️ Settings")
-    # Profile Picture Upload
-    st.write("🖼 Change Profile Picture")
-    new_profile_picture = st.file_uploader("Upload a new profile picture", type=["jpg", "png"])
-    
-    if new_profile_picture:
-        st.image(new_profile_picture, width=150, caption="New Profile Picture")
-        st.success("✅ Profile picture updated successfully!")
-     
-    st.subheader("Edit Profile Details")
-    name = st.text_input("Your Name", "UWABATONI Laurene")
-    location = st.text_input("Location", "Musanze, Rwanda")
-    field_of_study = st.text_input("Field of Study", "Software Engineering, Year 3")
-    university = st.text_input("University", "INES Ruhengeri")
-    about_me = st.text_area("About Me", "I am Laurene, an enthusiastic software engineering student...")
-    
-    if st.button("Save Changes"):
-        st.success("✅ Profile updated successfully!")
-    
+    # Theme Customization (Light/Dark Mode)
+    theme = st.selectbox("Choose Theme", ["Light", "Dark"])
+    if theme == "Dark":
+        st.markdown("""
+            <style>
+                .main {background-color: #2E2E2E; color: white;}
+                .stSidebar {background-color: #1E1E1E; color: white;}
+                .stButton > button {background-color: #1F618D; color: white; border-radius: 10px;}
+                .stExpander {background-color: #2E2E2E; color: white;}
+                .stProgress {background-color: #D5D8DC;}
+            </style>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+            <style>
+                .main {background-color: #f5f7fa; color: black;}
+                .stSidebar {background-color: #2E4053; color: white;}
+                .stButton > button {background-color: #1F618D; color: white; border-radius: 10px;}
+                .stExpander {background-color: #f5f7fa; color: black;}
+                .stProgress {background-color: #D5D8DC;}
+            </style>
+        """, unsafe_allow_html=True)
+    # Button to show/hide login form
+    if not st.session_state.authenticated:
+        if st.button("🔐 Login to Change Profile Details"):
+            st.session_state.show_login = not st.session_state.show_login  # Toggle login form visibility
+
+    # Display login form only if the button is clicked
+    if st.session_state.show_login and not st.session_state.authenticated:
+        with st.form("settings_login_form"):
+            st.subheader("🔑 Admin Login Required")
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
+            login_button = st.form_submit_button("Login")
+
+            if login_button:
+                if email == OWNER_EMAIL and password == OWNER_PASSWORD:
+                    st.session_state.authenticated = True
+                    st.success("✅ Login successful! You can now edit profile details.")
+                    st.session_state.show_login = False  # Hide form after login
+                else:
+                    st.error("❌ Invalid email or password. Access denied!")
+
+    # Show editable profile settings only if authenticated
+    if st.session_state.authenticated:
+        st.subheader("Edit Profile Details")
+        name = st.text_input("Your Name", PROFILE_DETAILS["name"])
+        location = st.text_input("Location", PROFILE_DETAILS["location"])
+        field_of_study = st.text_input("Field of Study", PROFILE_DETAILS["field_of_study"])
+        university = st.text_input("University", PROFILE_DETAILS["university"])
+        about_me = st.text_area("About Me", PROFILE_DETAILS["about_me"])
+
+        if st.button("Save Changes"):
+            st.success("✅ Profile updated successfully!")
+
+        # Profile Picture Upload
+        st.subheader("🖼 Change Profile Picture")
+        new_profile_picture = st.file_uploader("Upload a new profile picture", type=["jpg", "png"])
+
+        if new_profile_picture:
+            with open("queen.jpg", "wb") as file:
+                file.write(new_profile_picture.getbuffer())
+            st.success("✅ Profile picture updated successfully! Refresh to see changes.")
+            st.image(new_profile_picture, width=150, caption="New Profile Picture")
+
